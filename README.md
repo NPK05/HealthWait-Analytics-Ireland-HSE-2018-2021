@@ -424,6 +424,6 @@ The dataset is sourced from [HSE Ireland Open Data](https://data.gov.ie) and is 
 
 ---
 
-> *"Behind every number in this dataset is a patient — a person waiting in pain, uncertainty, or diminishing hope. Data analysis is only meaningful when it leads to action."*
+> *"Behind every number in this dataset is a patient, a person waiting in pain, uncertainty, or diminishing hope. Data analysis is only meaningful when it leads to action."*
 >
 > — NPK05
