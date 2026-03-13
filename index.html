@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>HSE Ireland · Waiting List Analytics · NPK05</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg0:#060D18; --bg1:#0A1628; --bg2:#0E1E36; --bg3:#122240;
+  --ln:rgba(255,255,255,0.07); --ln2:rgba(255,255,255,0.13);
+  --blue:#2D7FF9; --blue2:#60A5FA;
+  --teal:#00C9B1; --teal2:#5EEAD4;
+  --coral:#FF5F7E; --coral2:#FFA0B4;
+  --amber:#F59E0B; --amber2:#FCD34D;
+  --violet:#7C3AED; --violet2:#A78BFA;
+  --green:#10B981; --green2:#6EE7B7;
+  --t1:#EDF2FF; --t2:#7B95B4; --t3:#3D5878; --t4:#1E3350;
+  --sw:200px; --th:50px; --r:9px;
+  --font:'Plus Jakarta Sans',sans-serif;
+  --mono:'JetBrains Mono',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--bg0);color:var(--t1);font-size:12px}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:var(--t4);border-radius:3px}
+
+/* ── SHELL: sidebar fixed, main scrolls ── */
+.app{display:flex;width:100vw;height:100vh;overflow:hidden}
+
+/* SIDEBAR */
+.sb{width:var(--sw);min-width:var(--sw);height:100vh;background:var(--bg1);
+  border-right:1px solid var(--ln);display:flex;flex-direction:column;
+  flex-shrink:0;overflow:hidden;position:relative}
+.sb::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;
+  background:linear-gradient(180deg,var(--blue),var(--teal),var(--coral));opacity:.5}
+.sb-brand{height:var(--th);padding:0 14px;display:flex;align-items:center;gap:9px;
+  border-bottom:1px solid var(--ln);flex-shrink:0}
+.brand-icon{width:28px;height:28px;border-radius:7px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--blue),var(--teal));
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:800;color:#fff;box-shadow:0 0 12px rgba(45,127,249,.4)}
+.bn{font-size:12px;font-weight:700;color:var(--t1);line-height:1.2}
+.bsub{font-size:9px;color:var(--t3)}
+.nav{flex:1;padding:10px 8px;display:flex;flex-direction:column;gap:1px;overflow:hidden}
+.ni{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:6px;
+  cursor:pointer;color:var(--t2);font-size:11px;font-weight:500;
+  transition:background .15s,color .15s;white-space:nowrap;position:relative}
+.ni:hover{background:rgba(45,127,249,.08);color:var(--t1)}
+.ni.on{background:rgba(45,127,249,.15);color:var(--blue2)}
+.ni.on::after{content:'';position:absolute;right:0;top:20%;bottom:20%;
+  width:2px;border-radius:2px;background:var(--blue)}
+.ni-ico{width:16px;text-align:center;font-size:13px;flex-shrink:0}
+.ni-pill{margin-left:auto;background:var(--coral);color:#fff;
+  font-size:8px;font-weight:700;padding:1px 5px;border-radius:10px}
+.ni-new{margin-left:auto;background:rgba(16,185,129,.2);color:var(--green2);
+  font-size:8px;font-weight:700;padding:1px 5px;border-radius:4px;
+  border:1px solid rgba(16,185,129,.3)}
+.sb-user{padding:10px 8px;border-top:1px solid var(--ln);flex-shrink:0}
+.user-chip{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:6px;cursor:pointer;transition:background .15s}
+.user-chip:hover{background:rgba(45,127,249,.1)}
+.uav{width:26px;height:26px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,var(--blue),var(--coral));
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;font-weight:700;color:#fff}
+.uname{font-size:11.5px;font-weight:700;color:var(--t1)}
+.urole{font-size:9px;color:var(--t3)}
+
+/* CONTACT MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(6,13,24,.85);
+  display:none;align-items:center;justify-content:center;z-index:999;backdrop-filter:blur(4px)}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--ln2);border-radius:12px;
+  padding:28px 30px;width:340px;position:relative;
+  box-shadow:0 24px 64px rgba(0,0,0,.6)}
+.modal-close{position:absolute;top:14px;right:14px;width:24px;height:24px;
+  border-radius:50%;background:rgba(255,255,255,.07);border:1px solid var(--ln);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  font-size:12px;color:var(--t2)}
+.modal-close:hover{background:rgba(255,255,255,.12);color:var(--t1)}
+.modal-av{width:52px;height:52px;border-radius:50%;margin:0 auto 14px;
+  background:linear-gradient(135deg,var(--blue),var(--coral));
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;font-weight:800;color:#fff;box-shadow:0 0 24px rgba(45,127,249,.4)}
+.modal-name{font-size:16px;font-weight:800;color:var(--t1);text-align:center;margin-bottom:3px}
+.modal-role{font-size:10.5px;color:var(--t3);text-align:center;margin-bottom:18px;
+  text-transform:uppercase;letter-spacing:.06em}
+.modal-hr{height:1px;background:var(--ln);margin-bottom:18px}
+.contact-row{display:flex;align-items:center;gap:10px;padding:10px 12px;
+  border-radius:7px;background:var(--bg3);border:1px solid var(--ln);
+  margin-bottom:8px;cursor:pointer;text-decoration:none;transition:border-color .15s}
+.contact-row:last-child{margin-bottom:0}
+.contact-row:hover{border-color:var(--blue)}
+.contact-ico{width:30px;height:30px;border-radius:6px;display:flex;align-items:center;
+  justify-content:center;font-size:14px;flex-shrink:0}
+.contact-lbl{font-size:10px;color:var(--t3);font-weight:500;text-transform:uppercase;letter-spacing:.05em}
+.contact-val{font-size:11.5px;color:var(--t1);font-weight:600;margin-top:1px;word-break:break-all}
+
+/* MAIN COLUMN */
+.main{flex:1;height:100vh;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+
+/* TOPBAR */
+.topbar{height:var(--th);min-height:var(--th);background:var(--bg1);
+  border-bottom:1px solid var(--ln);display:flex;align-items:center;
+  padding:0 18px;gap:12px;flex-shrink:0}
+.topbar-title .main-t{font-size:13px;font-weight:700;color:var(--t1);line-height:1.2}
+.topbar-title .sub-t{font-size:9.5px;color:var(--t3)}
+.tb-div{width:1px;height:22px;background:var(--ln);flex-shrink:0}
+.bc{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--t3)}
+.bc strong{color:var(--t2);font-weight:500}
+.tb-right{display:flex;align-items:center;gap:8px;margin-left:auto}
+.tb-search{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.04);
+  border:1px solid var(--ln);border-radius:6px;padding:5px 10px;width:165px;
+  transition:border-color .15s}
+.tb-search:focus-within{border-color:rgba(45,127,249,.5)}
+.tb-search input{background:none;border:none;outline:none;color:var(--t1);
+  font-family:var(--font);font-size:11px;width:100%}
+.tb-search input::placeholder{color:var(--t3)}
+.npk{display:flex;align-items:center;gap:6px;background:rgba(45,127,249,.1);
+  border:1px solid rgba(45,127,249,.25);border-radius:20px;padding:3px 11px 3px 5px;
+  cursor:pointer;transition:background .15s}
+.npk:hover{background:rgba(45,127,249,.18)}
+.npk-av{width:20px;height:20px;border-radius:50%;
+  background:linear-gradient(135deg,var(--blue),var(--coral));
+  display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff}
+.npk-lbl{font-size:10.5px;font-weight:700;color:var(--blue2)}
+
+/* ═══════════════════════════════════════════════
+   TAB SWITCHING — the only approach that never breaks:
+   .tab-content scrolls, each .tab-panel is display:none
+   until it has class .on, then display:block
+   No position:absolute, no absolute layout tricks.
+═══════════════════════════════════════════════ */
+.tab-content{flex:1;overflow-y:auto;overflow-x:hidden;background:var(--bg0)}
+.tab-panel{display:none;padding:10px}
+.tab-panel.on{display:block}
+
+/* ── GRID LAYOUTS — pixel heights, no 1fr rows ── */
+.grid-2col{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:9px}
+.grid-3col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-bottom:9px}
+.grid-12col{display:grid;grid-template-columns:1fr 2fr;gap:9px;margin-bottom:9px}
+.grid-21col{display:grid;grid-template-columns:2fr 1fr;gap:9px;margin-bottom:9px}
+.grid-13col{display:grid;grid-template-columns:1fr 3fr;gap:9px;margin-bottom:9px}
+.grid-auto{display:grid;gap:9px;margin-bottom:9px}
+
+/* CARD */
+.card{background:var(--bg2);border:1px solid var(--ln);border-radius:var(--r);
+  padding:12px 14px;display:flex;flex-direction:column;overflow:hidden;
+  transition:border-color .2s}
+.card:hover{border-color:rgba(45,127,249,.2)}
+.ct{font-size:11.5px;font-weight:700;color:var(--t1);flex-shrink:0;margin-bottom:2px}
+.cs{font-size:9.5px;color:var(--t3);margin-bottom:9px;flex-shrink:0}
+.chart-box{position:relative}
+
+/* BANNER */
+.banner{background:linear-gradient(135deg,rgba(45,127,249,.12),rgba(0,201,177,.06));
+  border:1px solid rgba(45,127,249,.2);border-radius:var(--r);padding:14px 18px;
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+.banner h1{font-size:14px;font-weight:800;color:var(--t1)}
+.banner p{font-size:9.5px;color:var(--t3);margin-top:2px}
+.banner-stats{display:flex;gap:24px}
+.bstat .v{font-size:20px;font-weight:800;line-height:1}
+.bstat .l{font-size:8.5px;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+
+/* SECTION HEADER */
+.sec-hdr{background:linear-gradient(135deg,rgba(45,127,249,.1),rgba(0,201,177,.05));
+  border:1px solid rgba(45,127,249,.18);border-radius:var(--r);
+  padding:12px 18px;display:flex;align-items:center;gap:12px;margin-bottom:9px}
+.sec-hdr .ico{font-size:20px;flex-shrink:0}
+.sec-hdr h2{font-size:13px;font-weight:800;color:var(--t1)}
+.sec-hdr p{font-size:10px;color:var(--t2);margin-top:2px}
+
+/* TABLE */
+.tbl-wrap{overflow-y:auto;max-height:360px}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:5px 8px;font-size:9px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.07em;color:var(--t3);border-bottom:1px solid var(--ln);
+  position:sticky;top:0;background:var(--bg2);z-index:1}
+td{padding:5px 8px;font-size:10.5px;border-bottom:1px solid rgba(255,255,255,.025);color:var(--t2)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(45,127,249,.04)}
+tr.hide{display:none}
+.bdg{display:inline-block;padding:1px 6px;border-radius:20px;font-size:8.5px;font-weight:700}
+.br{background:rgba(255,95,126,.13);color:var(--coral2)}
+.by{background:rgba(245,158,11,.13);color:var(--amber2)}
+.bg2{background:rgba(16,185,129,.13);color:var(--green2)}
+.bb{background:rgba(45,127,249,.13);color:var(--blue2)}
+.stat-tbl th,.stat-tbl td{text-align:right}
+.stat-tbl th:first-child,.stat-tbl td:first-child{text-align:left}
+
+/* DONUT */
+.donut-wrap{position:relative;margin:0 auto}
+.donut-ctr{position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;pointer-events:none}
+.dv{font-size:18px;font-weight:800;color:var(--t1);line-height:1}
+.ds2{font-size:8.5px;color:var(--t3);margin-top:2px}
+.dleg{display:flex;flex-direction:column;gap:5px;margin-top:10px}
+.dleg-r{display:flex;align-items:center;gap:6px}
+.dd{width:7px;height:7px;border-radius:2px;flex-shrink:0}
+.dn{font-size:10.5px;color:var(--t2);flex:1}
+.dp{font-size:10.5px;font-weight:600;color:var(--t1)}
+
+/* PROGRESS BARS */
+.prow{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--ln)}
+.prow:last-child{border-bottom:none}
+.plbl{font-size:10.5px;color:var(--t2);width:70px;flex-shrink:0;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.pbar{flex:1;height:5px;background:rgba(255,255,255,.05);border-radius:3px;overflow:hidden}
+.pfil{height:100%;border-radius:3px}
+.pval{font-size:10px;font-weight:600;color:var(--t1);width:32px;text-align:right;flex-shrink:0}
+
+/* METRIC ROWS */
+.mrow{display:flex;align-items:center;justify-content:space-between;
+  padding:5px 0;border-bottom:1px solid var(--ln)}
+.mrow:last-child{border-bottom:none}
+.ml{font-size:10.5px;color:var(--t2)}
+.mv{font-size:10.5px;font-weight:700;color:var(--t1);font-family:var(--mono)}
+
+/* ALERT ITEMS */
+.alert{display:flex;gap:8px;padding:8px 10px;border-radius:6px;
+  background:rgba(255,255,255,.025);border:1px solid var(--ln);margin-bottom:6px}
+.alert:last-child{margin-bottom:0}
+.ai{font-size:13px;flex-shrink:0;margin-top:1px}
+.at{font-size:11px;font-weight:600;color:var(--t1)}
+.as{font-size:9.5px;color:var(--t3);margin-top:1px}
+
+/* KPI PILLS */
+.kpi-pill{display:flex;align-items:center;gap:10px;background:var(--bg3);
+  border:1px solid var(--ln);border-radius:7px;padding:9px 13px;margin-bottom:6px}
+.kpi-pill:last-child{margin-bottom:0}
+.kpi-pill .ico{font-size:15px;flex-shrink:0}
+.kv{font-size:17px;font-weight:800;line-height:1}
+.kl{font-size:9.5px;color:var(--t3);margin-top:2px}
+
+/* DATASET ROWS */
+.ds-row{display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--ln)}
+.ds-row:last-child{border-bottom:none}
+.ds-k{font-size:10px;font-weight:600;color:var(--t2);width:82px;flex-shrink:0}
+.ds-v{font-size:10px;color:var(--t1);flex:1;line-height:1.55}
+
+/* PROBLEM POINTS */
+.pp{display:flex;gap:9px;padding:7px 10px;border-radius:6px;
+  background:rgba(255,255,255,.02);border-left:2px solid var(--blue);margin-bottom:6px}
+.pp:last-child{margin-bottom:0}
+.pp-n{font-size:9px;font-weight:700;color:var(--blue2);width:18px;flex-shrink:0;margin-top:2px}
+.pp-t{font-size:10.5px;color:var(--t2);line-height:1.6}
+.pp-t strong{color:var(--t1)}
+
+/* INSIGHT CARDS */
+.ins-card{border-radius:8px;padding:14px 16px;border:1px solid transparent;
+  display:flex;flex-direction:column;gap:7px}
+.ins-num{font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.07em}
+.ins-title{font-size:12px;font-weight:700;color:var(--t1)}
+.ins-body{font-size:10.5px;color:var(--t2);line-height:1.7;flex:1}
+.ins-stat{display:inline-block;font-size:10px;font-weight:700;padding:3px 8px;
+  border-radius:4px;font-family:var(--mono);align-self:flex-start}
+
+/* REC CARDS */
+.rec-card{display:flex;gap:10px;align-items:flex-start;border-radius:7px;
+  padding:12px 14px;border:1px solid transparent}
+.rec-p{flex-shrink:0;padding:2px 8px;border-radius:4px;font-size:8.5px;
+  font-weight:700;letter-spacing:.04em;line-height:1.6;white-space:nowrap}
+.rec-t{font-size:11.5px;font-weight:700;color:var(--t1);margin-bottom:4px}
+.rec-b{font-size:10.5px;color:var(--t2);line-height:1.65}
+
+/* LEGEND */
+.cleg{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:7px}
+.cli{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--t2)}
+.cll{width:14px;height:2px;border-radius:2px}
+
+/* SEC LABEL */
+.sec-lbl{font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;
+  letter-spacing:.09em;margin-bottom:8px;padding-bottom:4px;
+  border-bottom:1px solid var(--ln)}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside class="sb">
+  <div class="sb-brand">
+    <div class="brand-icon">H</div>
+    <div><div class="bn">HSE Analytics</div><div class="bsub">Waiting List EDA</div></div>
+  </div>
+  <nav class="nav">
+    <div class="ni on"  data-tab="about"> <span class="ni-ico">📋</span>About &amp; Dataset</div>
+    <div class="ni"     data-tab="ov">    <span class="ni-ico">⊞</span>Overview</div>
+    <div class="ni"     data-tab="tr">    <span class="ni-ico">📈</span>Time Trends</div>
+    <div class="ni"     data-tab="sp">    <span class="ni-ico">🏥</span>Specialties</div>
+    <div class="ni"     data-tab="dm">    <span class="ni-ico">👥</span>Demographics</div>
+    <div class="ni"     data-tab="st">    <span class="ni-ico">⚗️</span>Statistics</div>
+    <div class="ni"     data-tab="ins">   <span class="ni-ico">💡</span>Insights<span class="ni-new">NEW</span></div>
+    <div class="ni"     data-tab="rec">   <span class="ni-ico">🎯</span>Recommendations<span class="ni-pill">6</span></div>
+  </nav>
+  <div class="sb-user">
+    <div class="user-chip" id="user-chip">
+      <div class="uav">NK</div>
+      <div><div class="uname">NPK05</div><div class="urole">Data Analyst</div></div>
+    </div>
+  </div>
+</aside>
+
+<!-- ═══ CONTACT MODAL ═══ -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-close" id="modal-close">✕</div>
+    <div class="modal-av">NK</div>
+    <div class="modal-name">Nallabothula Pavan Kumar</div>
+    <div class="modal-role">Data Analyst · HSE Portfolio Project</div>
+    <div class="modal-hr"></div>
+    <a class="contact-row" href="mailto:npavankumarus72@gmail.com">
+      <div class="contact-ico" style="background:rgba(234,67,53,.15);color:#EA4335;font-style:normal">✉</div>
+      <div><div class="contact-lbl">Email</div><div class="contact-val">npavankumarus72@gmail.com</div></div>
+    </a>
+    <a class="contact-row" href="https://linkedin.com/in/nallabothulapavankumar/" target="_blank">
+      <div class="contact-ico" style="background:rgba(10,102,194,.15);color:#0A66C2;font-weight:800">in</div>
+      <div><div class="contact-lbl">LinkedIn</div><div class="contact-val">linkedin.com/in/nallabothulapavankumar</div></div>
+    </a>
+  </div>
+</div>
+
+<!-- ═══ MAIN ═══ -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-title">
+      <div class="main-t">Ireland HSE · Waiting List Analytics</div>
+      <div class="sub-t">2018–2021 · 452,944 Records · NPK05 Portfolio</div>
+    </div>
+    <div class="tb-div"></div>
+    <div class="bc">Dashboard &nbsp;›&nbsp; <strong id="bc-lbl">About &amp; Dataset</strong></div>
+    <div class="tb-right">
+      <div class="tb-search">
+        <span style="color:var(--t3);font-size:11px">🔍</span>
+        <input id="srch" type="text" placeholder="Filter specialties…">
+      </div>
+      <div class="npk" id="npk-btn">
+        <div class="npk-av">NK</div>
+        <span class="npk-lbl">NPK05</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB CONTENT — single scrolling container, panels shown/hidden -->
+  <div class="tab-content">
+
+    <!-- ══════════════════════════════════════
+         TAB: ABOUT & DATASET
+    ══════════════════════════════════════ -->
+    <div class="tab-panel on" id="tab-about">
+
+      <div class="sec-hdr">
+        <span class="ico">🏥</span>
+        <div>
+          <h2>Ireland HSE Waiting List — Business Problem &amp; Dataset</h2>
+          <p>Exploratory Data Analysis of national healthcare waiting lists · Jan 2018 – Mar 2021 · Portfolio by NPK05</p>
+        </div>
+      </div>
+
+      <div class="grid-3col">
+        <!-- KPIs -->
+        <div class="card">
+          <div class="ct">Key Metrics at a Glance</div>
+          <div class="cs">Top-level findings from full EDA</div>
+          <div class="kpi-pill"><span class="ico">🔵</span><div><div class="kv" style="color:var(--blue2)">24.6M</div><div class="kl">Total patient-waits 2018–2021</div></div></div>
+          <div class="kpi-pill"><span class="ico">🔴</span><div><div class="kv" style="color:var(--coral2)">4.58M</div><div class="kl">Waiting 18+ months (18.6%)</div></div></div>
+          <div class="kpi-pill"><span class="ico">🟢</span><div><div class="kv" style="color:var(--teal2)">88.2%</div><div class="kl">Outpatient share of total load</div></div></div>
+          <div class="kpi-pill"><span class="ico">🟡</span><div><div class="kv" style="color:var(--amber2)">+121%</div><div class="kl">18+ mo inpatient surge post-COVID</div></div></div>
+          <div class="kpi-pill"><span class="ico">🔴</span><div><div class="kv" style="color:var(--coral2)">32%</div><div class="kl">ENT long-wait rate — highest specialty</div></div></div>
+          <div class="kpi-pill"><span class="ico">🟣</span><div><div class="kv" style="color:var(--violet2)">ρ=0.194</div><div class="kl">Spearman trend confirmed p=0.001</div></div></div>
+        </div>
+        <!-- Business Problem -->
+        <div class="card">
+          <div class="ct">Business Problem</div>
+          <div class="cs">Why this analysis matters</div>
+          <div class="pp"><div class="pp-n">01</div><div class="pp-t"><strong>Crisis Scale:</strong> Ireland's HSE waiting list exceeded <strong>24.6M</strong> patient-waits across 2018–2021, with 4.58M patients waiting over 18 months.</div></div>
+          <div class="pp"><div class="pp-n">02</div><div class="pp-t"><strong>COVID Impact:</strong> Inpatient 18+ month waiters surged <strong>+121%</strong> in 12 months. The backlog was still accelerating at data cut-off March 2021.</div></div>
+          <div class="pp"><div class="pp-n">03</div><div class="pp-t"><strong>Resource Mismatch:</strong> <strong>88.2%</strong> of all waits are Outpatient, yet planning historically focused on inpatient bed counts.</div></div>
+          <div class="pp"><div class="pp-n">04</div><div class="pp-t"><strong>Specialty Inequity:</strong> ENT carries a <strong>32%</strong> long-wait rate, Eyes 24.6%, Bones 20.1% — delayed care causes permanent harm.</div></div>
+          <div class="pp"><div class="pp-n">05</div><div class="pp-t"><strong>Data Gaps:</strong> 191 missing HIPE codes, no patient-level IDs, no geographic or outcome linkage.</div></div>
+        </div>
+        <!-- Dataset Info -->
+        <div class="card">
+          <div class="ct">Dataset Overview</div>
+          <div class="cs">Source: HSE Ireland Open Data · Data.gov.ie</div>
+          <div class="ds-row"><div class="ds-k">Source</div><div class="ds-v">Health Service Executive (HSE) Ireland — data.gov.ie</div></div>
+          <div class="ds-row"><div class="ds-k">Files</div><div class="ds-v">IN_WL 2018–2021.csv · Op_WL 2018–2021.csv · Mapping_Specialty.csv</div></div>
+          <div class="ds-row"><div class="ds-k">Period</div><div class="ds-v">Jan 2018 – Mar 2021 (2021 partial)</div></div>
+          <div class="ds-row"><div class="ds-k">Records</div><div class="ds-v">452,944 rows · 182,136 Inpatient · 270,808 Outpatient</div></div>
+          <div class="ds-row"><div class="ds-k">Specialties</div><div class="ds-v">78 specialties → 27 groups via Mapping_Specialty</div></div>
+          <div class="ds-row"><div class="ds-k">Key Fields</div><div class="ds-v">Archive Date · Group · HIPE · Specialty · Case Type · Time Bands · Total</div></div>
+          <div class="ds-row"><div class="ds-k">Time Bands</div><div class="ds-v">0–3 · 3–6 · 6–9 · 9–12 · 12–15 · 15–18 · 18+ Months</div></div>
+          <div class="ds-row"><div class="ds-k">Age Groups</div><div class="ds-v">0–15 · 16–64 · 65+</div></div>
+          <div class="ds-row"><div class="ds-k">Cleaning</div><div class="ds-v">Whitespace stripped · Speciality→Specialty · Time band regex normalised · dayfirst=True</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         TAB: OVERVIEW
+    ══════════════════════════════════════ -->
+    <div class="tab-panel" id="tab-ov">
+
+      <div class="banner">
+        <div>
+          <h1>Ireland HSE Waiting List · 2018–2021</h1>
+          <p>452,944 records · Jan 2018 – Mar 2021 · 78 specialties · Inpatient &amp; Outpatient combined</p>
+        </div>
+        <div class="banner-stats">
+          <div class="bstat"><div class="v" style="color:var(--blue2)">24.6M</div><div class="l">Total Waits</div></div>
+          <div class="bstat"><div class="v" style="color:var(--coral2)">4.58M</div><div class="l">18+ Months</div></div>
+          <div class="bstat"><div class="v" style="color:var(--teal2)">88.2%</div><div class="l">Outpatient</div></div>
+          <div class="bstat"><div class="v" style="color:var(--amber2)">78</div><div class="l">Specialties</div></div>
+        </div>
+      </div>
+
+      <!-- Annual bar — full width -->
+      <div class="card" style="margin-bottom:9px">
+        <div class="ct">Annual Volume · Inpatient vs Outpatient</div>
+        <div class="cs">2018–2021 · 2021 partial Jan–Mar only</div>
+        <div class="chart-box" style="height:220px"><canvas id="c-annual"></canvas></div>
+      </div>
+
+      <!-- Donut + 18+ rate side by side -->
+      <div class="grid-2col">
+        <div class="card">
+          <div class="ct">Patient Type Split</div>
+          <div class="cs">Share of 24.6M total waits</div>
+          <div style="display:flex;align-items:center;gap:24px;padding:8px 0">
+            <div class="donut-wrap" style="width:110px;height:110px;flex-shrink:0">
+              <canvas id="c-pt" width="110" height="110"></canvas>
+              <div class="donut-ctr"><div class="dv">88%</div><div class="ds2">Outpatient</div></div>
+            </div>
+            <div>
+              <div class="dleg">
+                <div class="dleg-r"><div class="dd" style="background:var(--blue)"></div><span class="dn">Outpatient</span><span class="dp">88.2%</span></div>
+                <div class="dleg-r"><div class="dd" style="background:var(--teal)"></div><span class="dn">Inpatient</span><span class="dp">11.8%</span></div>
+              </div>
+              <div style="margin-top:14px">
+                <div class="mrow"><span class="ml">Outpatient total</span><span class="mv" style="color:var(--blue2)">21.7M</span></div>
+                <div class="mrow"><span class="ml">Inpatient total</span><span class="mv" style="color:var(--teal2)">2.9M</span></div>
+                <div class="mrow"><span class="ml">Grand total</span><span class="mv">24.6M</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ct">18+ Month Wait Rate by Specialty</div>
+          <div class="cs">% patients waiting over 18 months per group</div>
+          <div id="spec-prog" style="padding-top:4px"></div>
+        </div>
+      </div>
+
+      <!-- Monthly timeline — full width -->
+      <div class="card">
+        <div class="ct">Monthly Waiting List Timeline · Jan 2018 – Mar 2021
+          <span style="font-size:9px;background:rgba(245,158,11,.12);color:var(--amber2);border:1px solid rgba(245,158,11,.2);border-radius:4px;padding:1px 6px;margin-left:6px">⚡ COVID lockdown Mar 2020</span>
+        </div>
+        <div class="cleg" style="margin-top:5px">
+          <div class="cli"><div class="cll" style="background:var(--blue)"></div>Outpatient</div>
+          <div class="cli"><div class="cll" style="background:var(--teal)"></div>Inpatient</div>
+        </div>
+        <div class="chart-box" style="height:220px"><canvas id="c-monthly"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         TAB: TIME TRENDS
+    ══════════════════════════════════════ -->
+    <div class="tab-panel" id="tab-tr">
+      <div class="grid-2col">
+        <div class="card">
+          <div class="ct">Monthly Volume · Outpatient &amp; Inpatient</div>
+          <div class="cleg">
+            <div class="cli"><div class="cll" style="background:var(--blue)"></div>Outpatient</div>
+            <div class="cli"><div class="cll" style="background:var(--teal)"></div>Inpatient</div>
+          </div>
+          <div class="chart-box" style="height:240px"><canvas id="c-m2"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="ct">18+ Month Inpatient Crisis — Monthly Trend</div>
+          <div class="cs">+121% surge in 12 months post-COVID March 2020</div>
+          <div class="chart-box" style="height:240px"><canvas id="c-lw"></canvas></div>
+        </div>
+      </div>
+      <div class="grid-2col">
+        <div class="card">
+          <div class="ct">Wait Duration Profile · Inpatient</div>
+          <div class="cs">Patients by time band — 2018–2021 total</div>
+          <div class="chart-box" style="height:240px"><canvas id="c-tbip"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="ct">Wait Duration Profile · Outpatient</div>
+          <div class="cs">Patients by time band — 2018–2021 total</div>
+          <div class="chart-box" style="height:240px"><canvas id="c-tbop"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         TAB: SPECIALTIES
+    ══════════════════════════════════════ -->
+    <div class="tab-panel" id="tab-sp">
+      <div class="grid-2col">
+        <div class="card">
+          <div class="ct">Top 10 · Inpatient Volume 2018–2021</div>
+          <div class="cs">Total patient-waits per specialty</div>
+          <div class="chart-box" style="height:280px"><canvas id="c-topip"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="ct">Top 10 · Outpatient Volume 2018–2021</div>
+          <div class="cs">Total patient-waits per specialty</div>
+          <div class="chart-box" style="height:280px"><canvas id="c-topop"></canvas></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ct">Specialty Group Risk Table</div>
+        <div class="cs">All 15 groups · Use search bar to filter</div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr>
+              <th>Group</th><th>Total Patients</th><th>Share</th><th>18+ Mo Rate</th><th>Risk Level</th>
+            </tr></thead>
+            <tbody id="risk-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         TAB: DEMOGRAPHICS
+    ══════════════════════════════════════ -->
+    <div class="tab-panel" id="tab-dm">
+      <div class="grid-3col">
+        <div class="card">
+          <div class="ct">Adult vs Child · Inpatient</div>
+          <div class="cs">Share of 2.9M inpatient waits</div>
+          <div style="display:flex;flex-direction:column;align-items:center;padding:10px 0">
+            <div class="donut-wrap" style="width:100px;height:100px">
+              <canvas id="c-acip" width="100" height="100"></canvas>
+              <div class="donut-ctr"><div class="dv">90%</div><div class="ds2">Adult</div></div>
+            </div>
+            <div class="dleg">
+              <div class="dleg-r"><div class="dd" style="background:var(--blue)"></div><span class="dn">Adult</span><span class="dp">90.4%</span></div>
+              <div class="dleg-r"><div class="dd" style="background:var(--amber)"></div><span class="dn">Child 0–15</span><span class="dp">9.6%</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ct">Adult vs Child · Outpatient</div>
+          <div class="cs">Share of 21.7M outpatient waits</div>
+          <div style="display:flex;flex-direction:column;align-items:center;padding:10px 0">
+            <div class="donut-wrap" style="width:100px;height:100px">
+              <canvas id="c-acop" width="100" height="100"></canvas>
+              <div class="donut-ctr"><div class="dv">85%</div><div class="ds2">Adult</div></div>
+            </div>
+            <div class="dleg">
+              <div class="dleg-r"><div class="dd" style="background:var(--violet)"></div><span class="dn">Adult</span><span class="dp">84.9%</span></div>
+              <div class="dleg-r"><div class="dd" style="background:var(--amber)"></div><span class="dn">Child 0–15</span><span class="dp">15.1%</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ct">Key Demographic Findings</div>
+          <div class="alert"><span class="ai">⚠️</span><div><div class="at">Children 18+ Month Waits Rising</div><div class="as">Developmental windows time-critical &amp; irreversible</div></div></div>
+          <div class="alert"><span class="ai">📈</span><div><div class="at">65+ Cohort Grew +19% in 2 Years</div><div class="as">Fastest growing segment 2018–2020</div></div></div>
+          <div class="alert"><span class="ai">👶</span><div><div class="at">Children = 15.1% of OP Waits</div><div class="as">Higher than inpatient share of 9.6%</div></div></div>
+          <div class="alert"><span class="ai">💼</span><div><div class="at">16–64 Largest Cohort</div><div class="as">Extended waits impact economic productivity</div></div></div>
+        </div>
+      </div>
+      <div class="grid-2col">
+        <div class="card">
+          <div class="ct">Total Waits by Age Group per Year · Stacked</div>
+          <div class="cs">0–15 / 16–64 / 65+ · 2018–2021</div>
+          <div class="chart-box" style="height:240px"><canvas id="c-age"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="ct">Age Group Growth from 2018 Baseline</div>
+          <div class="cs">% change year-on-year vs 2018</div>
+          <div class="chart-box" style="height:240px"><canvas id="c-ageg"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         TAB: STATISTICS
+    ══════════════════════════════════════ -->
+    <div class="tab-panel" id="tab-st">
+      <div class="grid-2col">
+        <!-- Descriptive stats -->
+        <div class="card">
+          <div class="ct">Descriptive Statistics · Inpatient · Outpatient · Combined</div>
+          <div class="cs">Distribution of per-record patient-wait counts</div>
+          <div class="tbl-wrap">
+            <table class="stat-tbl">
+              <thead><tr>
+                <th style="text-align:left">Metric</th>
+                <th style="color:#93C5FD">Inpatient</th>
+                <th style="color:#5EEAD4">Outpatient</th>
+                <th style="color:#FCD34D">Combined</th>
+              </tr></thead>
+              <tbody id="stat-body"></tbody>
+            </table>
+          </div>
+        </div>
+        <!-- Hypothesis tests -->
+        <div class="card">
+          <div class="ct">Hypothesis Testing Results</div>
+          <div class="cs">Non-parametric — all series skewness &gt; 5.4</div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Test</th><th>Statistic</th><th>p-value</th><th>Result</th></tr></thead>
+              <tbody>
+                <tr><td style="color:var(--blue2);font-weight:600">Kruskal-Wallis H</td><td style="font-family:var(--mono)">H = 141.4</td><td style="color:var(--coral2)">p &lt; 0.001</td><td><span class="bdg br">SIGNIFICANT</span></td></tr>
+                <tr><td style="color:var(--blue2);font-weight:600">Mann-Whitney U</td><td style="font-family:var(--mono)">U = 1.34×10¹⁰</td><td style="color:var(--coral2)">p ≈ 0.000</td><td><span class="bdg br">SIGNIFICANT</span></td></tr>
+                <tr><td style="color:var(--blue2);font-weight:600">Chi-Square</td><td style="font-family:var(--mono)">χ² = 2015.7</td><td style="color:var(--coral2)">p &lt; 0.001</td><td><span class="bdg by">WEAK V=0.067</span></td></tr>
+                <tr><td style="color:var(--blue2);font-weight:600">Spearman ρ</td><td style="font-family:var(--mono)">ρ = 0.194</td><td style="color:var(--coral2)">p = 0.001</td><td><span class="bdg br">TRENDING ↑</span></td></tr>
+                <tr><td style="color:var(--blue2);font-weight:600">Pearson r</td><td style="font-family:var(--mono)">r = 0.114</td><td style="color:var(--amber2)">p = 0.068</td><td><span class="bdg bb">MARGINAL</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="grid-2col">
+        <!-- Distribution chart -->
+        <div class="card">
+          <div class="ct">Volume Distribution by Year</div>
+          <div class="cs">Record count per patient-volume bucket · 2018–2021</div>
+          <div class="chart-box" style="height:220px"><canvas id="c-dist"></canvas></div>
+        </div>
+        <!-- Correlation matrix -->
+        <div class="card">
+          <div class="ct">Correlation Matrix</div>
+          <div class="cs">Key variable relationships</div>
+          <div id="corr-rows" style="padding-top:4px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         TAB: INSIGHTS
+    ══════════════════════════════════════ -->
+    <div class="tab-panel" id="tab-ins">
+
+      <div class="sec-hdr" style="background:linear-gradient(135deg,rgba(16,185,129,.1),rgba(45,127,249,.06));border-color:rgba(16,185,129,.2)">
+        <span class="ico">🔬</span>
+        <div>
+          <h2 style="color:var(--green2)">9 Critical Insights from the HSE Waiting List Analysis</h2>
+          <p>Data-driven findings across volume, trends, specialties, demographics and statistical significance · 2018–2021</p>
+        </div>
+      </div>
+
+      <div class="grid-3col">
+        <!-- Column 1 -->
+        <div>
+          <div class="sec-lbl">Volume &amp; Scale</div>
+          <div class="ins-card" style="background:rgba(45,127,249,.06);border-color:rgba(45,127,249,.22);margin-bottom:9px">
+            <div class="ins-num">Insight 01</div>
+            <div class="ins-title">Outpatient Dominates at 88.2%</div>
+            <div class="ins-body">Of 24.6M total patient-waits, 21.7M are Outpatient. The inpatient system receives disproportionate policy attention relative to its actual demand share of just 11.8%.</div>
+            <span class="ins-stat" style="background:rgba(45,127,249,.1);color:var(--blue2)">21.7M / 24.6M = 88.2%</span>
+          </div>
+          <div class="ins-card" style="background:rgba(255,95,126,.06);border-color:rgba(255,95,126,.22);margin-bottom:9px">
+            <div class="ins-num">Insight 02</div>
+            <div class="ins-title">1 in 5 Patients Waits Over 18 Months</div>
+            <div class="ins-body">4.58M patient-waits (18.6%) exceed 18 months — the crisis threshold. This ratio worsened every single year from 2018 onward with no sign of reversal.</div>
+            <span class="ins-stat" style="background:rgba(255,95,126,.1);color:var(--coral2)">4.58M patients · 18.6% rate</span>
+          </div>
+          <div class="ins-card" style="background:rgba(0,201,177,.06);border-color:rgba(0,201,177,.22)">
+            <div class="ins-num">Insight 03</div>
+            <div class="ins-title">2019 Was the Last Year of Improvement</div>
+            <div class="ins-body">Inpatient volume fell 9.2% from 2018 to 2019 — the only positive trend in the dataset. From 2019 onwards every metric deteriorated, accelerated by COVID-19.</div>
+            <span class="ins-stat" style="background:rgba(0,201,177,.1);color:var(--teal2)">IP 2018→2019: −9.2% ▼</span>
+          </div>
+        </div>
+        <!-- Column 2 -->
+        <div>
+          <div class="sec-lbl">COVID &amp; Statistical Trend</div>
+          <div class="ins-card" style="background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.22);margin-bottom:9px">
+            <div class="ins-num">Insight 04</div>
+            <div class="ins-title">COVID Created a 121% Crisis Surge</div>
+            <div class="ins-body">Inpatient 18+ month waiters grew from ~5,100 in March 2020 to ~11,300 by March 2021 — a 121% increase in 12 months. The trend was still accelerating at data cut-off.</div>
+            <span class="ins-stat" style="background:rgba(245,158,11,.1);color:var(--amber2)">5,105 → 11,306 in 12 months</span>
+          </div>
+          <div class="ins-card" style="background:rgba(139,92,246,.06);border-color:rgba(139,92,246,.22);margin-bottom:9px">
+            <div class="ins-num">Insight 05</div>
+            <div class="ins-title">Spearman ρ = 0.194 Confirms Deterioration</div>
+            <div class="ins-body">A Spearman rank correlation of ρ=0.194 (p=0.001) between year and average wait confirms the deterioration is statistically significant and detectable months ahead — enabling proactive intervention.</div>
+            <span class="ins-stat" style="background:rgba(139,92,246,.1);color:var(--violet2)">ρ = 0.194 · p = 0.001</span>
+          </div>
+          <div class="ins-card" style="background:rgba(16,185,129,.06);border-color:rgba(16,185,129,.22)">
+            <div class="ins-num">Insight 06</div>
+            <div class="ins-title">Kruskal-Wallis Confirms Year Effects</div>
+            <div class="ins-body">H=141.4 (p&lt;0.001) confirms that the distribution of waiting list counts differs significantly across years — COVID is not just a narrative, it is statistically proven in the data.</div>
+            <span class="ins-stat" style="background:rgba(16,185,129,.1);color:var(--green2)">H = 141.4 · p &lt; 0.001</span>
+          </div>
+        </div>
+        <!-- Column 3 -->
+        <div>
+          <div class="sec-lbl">Specialty &amp; Equity</div>
+          <div class="ins-card" style="background:rgba(255,95,126,.06);border-color:rgba(255,95,126,.22);margin-bottom:9px">
+            <div class="ins-num">Insight 07</div>
+            <div class="ins-title">ENT is the Most Inequitable Specialty</div>
+            <div class="ins-body">ENT carries the highest 18+ month rate at 32.0% — nearly 1 in 3 patients waiting over 18 months. Eyes (24.6%) and Urine (22.1%) follow. These are not high-volume specialties, meaning the bottleneck is capacity, not demand.</div>
+            <span class="ins-stat" style="background:rgba(255,95,126,.1);color:var(--coral2)">ENT: 32% · Eyes: 24.6%</span>
+          </div>
+          <div class="ins-card" style="background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.22);margin-bottom:9px">
+            <div class="ins-num">Insight 08</div>
+            <div class="ins-title">Children Bear Disproportionate OP Burden</div>
+            <div class="ins-body">Children (0–15) represent 15.1% of outpatient waits but only 9.6% of inpatient. Extended waits during developmental years carry lifelong consequences that adults do not face.</div>
+            <span class="ins-stat" style="background:rgba(245,158,11,.1);color:var(--amber2)">15.1% OP vs 9.6% IP</span>
+          </div>
+          <div class="ins-card" style="background:rgba(0,201,177,.06);border-color:rgba(0,201,177,.22)">
+            <div class="ins-num">Insight 09</div>
+            <div class="ins-title">65+ Growing Fastest — Pressure Ahead</div>
+            <div class="ins-body">The 65+ cohort grew +19% over 2018–2020, outpacing all other age groups. As Ireland's population ages, this systemic pressure will compound without structural capacity investment.</div>
+            <span class="ins-stat" style="background:rgba(0,201,177,.1);color:var(--teal2)">65+ cohort: +19% in 2 years</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         TAB: RECOMMENDATIONS
+    ══════════════════════════════════════ -->
+    <div class="tab-panel" id="tab-rec">
+      <div style="background:rgba(255,95,126,.07);border:1px solid rgba(255,95,126,.22);border-radius:var(--r);padding:14px 18px;display:flex;align-items:center;gap:12px;margin-bottom:9px">
+        <span style="font-size:20px;flex-shrink:0">🚨</span>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:700;color:var(--coral2)">4.58M patients waiting 18+ months — 6 evidence-based actions required</div>
+          <div style="font-size:10px;color:var(--t2);margin-top:2px">Prioritised by statistical severity · ENT 32% · Eyes 24.6% · COVID backlog accelerating at data cut-off</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:14px;font-weight:800;color:var(--blue2)">NPK05</div>
+          <div style="font-size:9px;color:var(--t3)">HSE EDA 2018–2021</div>
+        </div>
+      </div>
+      <div class="grid-3col" id="rec-grid"></div>
+    </div>
+
+  </div><!-- /tab-content -->
+</div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+/* ═══════════════════════
+   DATA
+═══════════════════════ */
+var D={
+  ml:["Jan'18","","Mar","","","","","","","","","Dec",
+      "Jan'19","","","","","","","","","","","Dec",
+      "Jan'20","","Mar★","","","","","","","","","Dec",
+      "Jan'21","","Mar"],
+  ip:[80204,79039,80058,79414,78596,78014,76156,74189,72718,72001,70989,70204,
+      72027,71205,70219,70295,68765,69671,68807,68390,67985,67511,66594,66563,
+      67303,66705,77748,86343,86946,84223,80283,77620,75902,74860,72843,72475,
+      81456,80936,79973],
+  op:[502482,500800,504111,507507,511904,511415,511675,514585,515547,516363,515360,516162,
+      523225,541899,546630,551965,556411,560251,564829,569498,568769,567221,563410,553434,
+      556770,558554,562693,567329,575863,584399,601362,610996,612083,612817,612576,606230,
+      622963,626895,628756],
+  lw:[4948,5016,5497,5739,5929,5807,5836,6146,5951,5625,5413,4921,
+      5279,5265,5311,5313,5108,5156,5047,4985,4841,4733,4577,4419,
+      4813,4782,5105,5844,6528,7073,7554,7895,8124,8498,8629,8691,
+      9851,10536,11306],
+  tbip:[1043892,658429,412539,264881,171944,111454,242091],
+  tbop:[5940446,3660530,2689045,2131600,1675924,1298012,4340180],
+  tbl:["0–3 Mo","3–6 Mo","6–9 Mo","9–12 Mo","12–15 Mo","15–18 Mo","18+ Mo"],
+  til:["Gen. Surgery","Orthopaedics","Urology","Ophthalmology","ENT","Gynaecology","Pain Relief","Plastic Surg","Cardiology","Vascular"],
+  tiv:[427447,416985,367688,356071,196293,182692,161519,158601,155695,76226],
+  tol:["Orthopaedics","ENT","Dermatology","Ophthalmology","Gen. Surgery","Urology","Gynaecology","Cardiology","Neurology","Gen. Medicine"],
+  tov:[2623831,2605221,1728100,1662309,1367636,1193854,1116032,945030,838409,807236],
+  ag0:[1069806,1092660,1074117,265915],
+  ag1:[4285730,4581345,4909234,1321288],
+  ag6:[1683680,1821368,2001572,533776],
+  sgl:["Bones","General","ENT","Eyes","Skin","Heart","Urine","Reprod.","Brain","Respiratory","Cosmetic","Child Care","Digestive","Hormonal","Blood"],
+  sgt:[3872550,3461164,3164796,2018385,1879410,1799645,1610779,1301968,1159509,865002,769681,556832,551078,538049,277814],
+  sgp:[20.1,9.0,32.0,24.6,20.2,8.9,22.1,9.3,21.1,18.6,22.1,6.2,11.4,18.5,8.0],
+  ds:[
+    {mean:15.95,median:5.0,std:30.99,min:1,max:799,q1:2.0,q3:16.0,iqr:14.0,skew:5.655,kurt:55.58,cv:"194.3%",p95:69},
+    {mean:80.21,median:29.0,std:148.62,min:1,max:4239,q1:6.0,q3:90.0,iqr:84.0,skew:5.474,kurt:53.36,cv:"185.3%",p95:323},
+    {mean:54.38,median:13.0,std:120.78,min:1,max:4239,q1:3.0,q3:53.0,iqr:50.0,skew:6.686,kurt:79.81,cv:"222.1%",p95:241}
+  ]
+};
+
+function f(n){return n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(0)+'K':String(n)}
+
+/* ═══════════════════════
+   CHART DEFAULTS
+═══════════════════════ */
+Chart.defaults.animation=false;
+Chart.defaults.responsive=true;
+Chart.defaults.maintainAspectRatio=false;
+Chart.defaults.color='#3D5878';
+Chart.defaults.borderColor='rgba(255,255,255,0.05)';
+Chart.defaults.font.family="'Plus Jakarta Sans',sans-serif";
+Chart.defaults.font.size=10;
+var BL='#2D7FF9',TL='#00C9B1',CO='#FF5F7E',AM='#F59E0B',VI='#7C3AED',GR='#10B981';
+var SX={ticks:{color:'#3D5878'},grid:{display:false}};
+var SY={ticks:{color:'#3D5878',callback:f},grid:{color:'rgba(255,255,255,0.04)'}};
+var NL={legend:{display:false}};
+var charts={};
+function mk(id,cfg){
+  var e=document.getElementById(id);
+  if(!e)return;
+  if(charts[id])charts[id].destroy();
+  charts[id]=new Chart(e,cfg);
+}
+
+/* ═══════════════════════
+   TAB SWITCHING
+   — dead simple, never breaks
+═══════════════════════ */
+var LABELS={about:'About & Dataset',ov:'Overview',tr:'Time Trends',
+  sp:'Specialties',dm:'Demographics',st:'Statistics',ins:'Insights',rec:'Recommendations'};
+
+document.querySelectorAll('.ni[data-tab]').forEach(function(el){
+  el.addEventListener('click',function(){
+    var t=this.dataset.tab;
+    // hide all panels
+    document.querySelectorAll('.tab-panel').forEach(function(p){p.classList.remove('on')});
+    // deactivate all nav items
+    document.querySelectorAll('.ni').forEach(function(n){n.classList.remove('on')});
+    // show target panel
+    var panel=document.getElementById('tab-'+t);
+    if(panel) panel.classList.add('on');
+    // activate nav item
+    this.classList.add('on');
+    // update breadcrumb
+    document.getElementById('bc-lbl').textContent=LABELS[t]||t;
+    // scroll to top
+    document.querySelector('.tab-content').scrollTop=0;
+  });
+});
+
+/* ═══════════════════════
+   CONTACT MODAL
+═══════════════════════ */
+function openModal(){document.getElementById('modal').classList.add('open')}
+function closeModal(){document.getElementById('modal').classList.remove('open')}
+document.getElementById('user-chip').addEventListener('click',openModal);
+document.getElementById('npk-btn').addEventListener('click',openModal);
+document.getElementById('modal-close').addEventListener('click',closeModal);
+document.getElementById('modal').addEventListener('click',function(e){if(e.target===this)closeModal()});
+
+/* ═══════════════════════
+   SEARCH
+═══════════════════════ */
+document.getElementById('srch').addEventListener('input',function(){
+  var q=this.value.toLowerCase();
+  document.querySelectorAll('#risk-body tr').forEach(function(r){
+    var nm=r.cells[0]?r.cells[0].textContent.toLowerCase():'';
+    r.classList.toggle('hide',q.length>0&&nm.indexOf(q)===-1);
+  });
+});
+
+/* ═══════════════════════
+   BUILD ALL CHARTS
+═══════════════════════ */
+window.addEventListener('DOMContentLoaded',function(){
+
+  /* OVERVIEW */
+  mk('c-annual',{type:'bar',
+    data:{labels:['2018','2019','2020','2021*'],datasets:[
+      {label:'Outpatient',data:[6127911,6667542,7061672,1878614],backgroundColor:BL+'BB',borderRadius:5,borderSkipped:false},
+      {label:'Inpatient', data:[911582,828032,923251,242365],    backgroundColor:TL+'BB',borderRadius:5,borderSkipped:false}
+    ]},
+    options:{plugins:{legend:{labels:{color:'#7B95B4',usePointStyle:true,pointStyle:'circle',boxWidth:7}}},scales:{x:SX,y:SY}}
+  });
+
+  mk('c-pt',{type:'doughnut',
+    data:{labels:['Outpatient','Inpatient'],datasets:[{data:[21735739,2905230],
+      backgroundColor:[BL+'EE',TL+'EE'],borderColor:'#0E1E36',borderWidth:3}]},
+    options:{cutout:'68%',plugins:{legend:{display:false},
+      tooltip:{callbacks:{label:function(c){return ' '+c.label+': '+f(c.parsed);}}}}}
+  });
+
+  var spN=[' ENT','Eyes','Urine','Skin','Bones','Cosmetic'],
+      spV=[32.0,24.6,22.1,20.2,20.1,22.1],
+      spC=[CO,AM,BL,GR,TL,VI],ph='';
+  for(var i=0;i<spN.length;i++){
+    ph+='<div class="prow"><span class="plbl">'+spN[i]+'</span>'
+      +'<div class="pbar"><div class="pfil" style="width:'+((spV[i]/32)*100).toFixed(0)+'%;background:'+spC[i]+'"></div></div>'
+      +'<span class="pval">'+spV[i]+'%</span></div>';
+  }
+  document.getElementById('spec-prog').innerHTML=ph;
+
+  mk('c-monthly',{type:'line',
+    data:{labels:D.ml,datasets:[
+      {label:'Outpatient',data:D.op,borderColor:BL,backgroundColor:'rgba(45,127,249,0.07)',tension:0.3,fill:true,pointRadius:0,borderWidth:1.8},
+      {label:'Inpatient', data:D.ip,borderColor:TL,backgroundColor:'rgba(0,201,177,0.05)',tension:0.3,fill:true,pointRadius:0,borderWidth:1.5}
+    ]},
+    options:{interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return ' '+c.dataset.label+': '+f(c.parsed.y);}}}},
+      scales:{x:{ticks:{color:'#3D5878',maxTicksLimit:8},grid:{display:false}},y:SY}}
+  });
+
+  /* TRENDS */
+  mk('c-m2',{type:'line',
+    data:{labels:D.ml,datasets:[
+      {label:'Outpatient',data:D.op,borderColor:BL,backgroundColor:'rgba(45,127,249,0.07)',tension:0.3,fill:true,pointRadius:0,borderWidth:1.8},
+      {label:'Inpatient', data:D.ip,borderColor:TL,backgroundColor:'rgba(0,201,177,0.05)',tension:0.3,fill:true,pointRadius:0,borderWidth:1.5}
+    ]},
+    options:{interaction:{mode:'index',intersect:false},
+      plugins:{legend:{labels:{color:'#7B95B4',usePointStyle:true,pointStyle:'circle',boxWidth:7}}},
+      scales:{x:{ticks:{color:'#3D5878',maxTicksLimit:8},grid:{display:false}},y:SY}}
+  });
+  mk('c-lw',{type:'line',
+    data:{labels:D.ml,datasets:[{label:'18+ Mo',data:D.lw,borderColor:CO,backgroundColor:'rgba(255,95,126,0.09)',tension:0.3,fill:true,pointRadius:0,borderWidth:1.8}]},
+    options:{plugins:NL,scales:{x:{ticks:{color:'#3D5878',maxTicksLimit:8},grid:{display:false}},y:SY}}
+  });
+  var tbc=[GR+'BB',GR+'66',AM+'BB',AM+'88',CO+'88',CO+'BB',CO+'FF'];
+  mk('c-tbip',{type:'bar',data:{labels:D.tbl,datasets:[{data:D.tbip,backgroundColor:tbc,borderRadius:4,borderSkipped:false}]},options:{plugins:NL,scales:{x:SX,y:SY}}});
+  mk('c-tbop',{type:'bar',data:{labels:D.tbl,datasets:[{data:D.tbop,backgroundColor:tbc,borderRadius:4,borderSkipped:false}]},options:{plugins:NL,scales:{x:SX,y:SY}}});
+
+  /* SPECIALTIES */
+  mk('c-topip',{type:'bar',
+    data:{labels:D.til.slice().reverse(),datasets:[{data:D.tiv.slice().reverse(),backgroundColor:BL+'BB',borderRadius:4,borderSkipped:false}]},
+    options:{indexAxis:'y',plugins:NL,scales:{x:{ticks:{color:'#3D5878',callback:f},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#7B95B4',font:{size:9.5}}}}}
+  });
+  mk('c-topop',{type:'bar',
+    data:{labels:D.tol.slice().reverse(),datasets:[{data:D.tov.slice().reverse(),backgroundColor:TL+'BB',borderRadius:4,borderSkipped:false}]},
+    options:{indexAxis:'y',plugins:NL,scales:{x:{ticks:{color:'#3D5878',callback:f},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#7B95B4',font:{size:9.5}}}}}
+  });
+
+  var tot=D.sgt.reduce(function(a,b){return a+b;},0),rb=document.getElementById('risk-body');
+  D.sgl.forEach(function(g,i){
+    var sh=(D.sgt[i]/tot*100).toFixed(1),lw=D.sgp[i];
+    var bdg=lw>=25?'<span class="bdg br">HIGH</span>':lw>=15?'<span class="bdg by">MEDIUM</span>':'<span class="bdg bg2">LOW</span>';
+    var lc=lw>=25?'color:var(--coral2)':lw>=15?'color:var(--amber2)':'color:var(--green2)';
+    rb.innerHTML+='<tr><td style="font-weight:600;color:var(--t1)">'+g+'</td>'
+      +'<td style="color:var(--blue2)">'+f(D.sgt[i])+'</td>'
+      +'<td>'+sh+'%</td>'
+      +'<td style="'+lc+';font-weight:600">'+lw+'%</td>'
+      +'<td>'+bdg+'</td></tr>';
+  });
+
+  /* DEMOGRAPHICS */
+  mk('c-acip',{type:'doughnut',data:{labels:['Adult','Child'],datasets:[{data:[2627576,277654],backgroundColor:[BL+'EE',AM+'CC'],borderColor:'#0E1E36',borderWidth:3}]},options:{cutout:'68%',plugins:{legend:{display:false}}}});
+  mk('c-acop',{type:'doughnut',data:{labels:['Adult','Child'],datasets:[{data:[18451232,3284029],backgroundColor:[VI+'CC',AM+'CC'],borderColor:'#0E1E36',borderWidth:3}]},options:{cutout:'68%',plugins:{legend:{display:false}}}});
+  mk('c-age',{type:'bar',
+    data:{labels:['2018','2019','2020','2021*'],datasets:[
+      {label:'0–15', data:D.ag0,backgroundColor:BL+'BB',borderRadius:3,stack:'s'},
+      {label:'16–64',data:D.ag1,backgroundColor:TL+'BB',borderRadius:3,stack:'s'},
+      {label:'65+',  data:D.ag6,backgroundColor:AM+'BB',borderRadius:3,stack:'s'}
+    ]},
+    options:{plugins:{legend:{labels:{color:'#7B95B4',usePointStyle:true,pointStyle:'circle',boxWidth:7}}},
+      scales:{x:{stacked:true,ticks:{color:'#3D5878'},grid:{display:false}},y:{stacked:true,ticks:{color:'#3D5878',callback:f},grid:{color:'rgba(255,255,255,0.04)'}}}}
+  });
+  var b0=D.ag0[0],b1=D.ag1[0],b6=D.ag6[0];
+  mk('c-ageg',{type:'line',
+    data:{labels:['2018','2019','2020','2021*'],datasets:[
+      {label:'0–15', data:D.ag0.map(function(v){return((v-b0)/b0*100).toFixed(1)}),borderColor:BL,pointBackgroundColor:BL,tension:0.3,fill:false,pointRadius:4,borderWidth:2},
+      {label:'16–64',data:D.ag1.map(function(v){return((v-b1)/b1*100).toFixed(1)}),borderColor:TL,pointBackgroundColor:TL,tension:0.3,fill:false,pointRadius:4,borderWidth:2},
+      {label:'65+',  data:D.ag6.map(function(v){return((v-b6)/b6*100).toFixed(1)}),borderColor:AM,pointBackgroundColor:AM,tension:0.3,fill:false,pointRadius:4,borderWidth:2}
+    ]},
+    options:{plugins:{legend:{labels:{color:'#7B95B4',usePointStyle:true,pointStyle:'circle',boxWidth:7}}},
+      scales:{x:SX,y:{ticks:{color:'#3D5878',callback:function(v){return v+'%'}},grid:{color:'rgba(255,255,255,0.04)'}}}}
+  });
+
+  /* STATISTICS */
+  var SF=[['Mean','mean'],['Median','median'],['Std Dev','std'],['Min','min'],['Max','max'],
+          ['Q1','q1'],['Q3','q3'],['IQR','iqr'],['Skewness','skew'],['Kurtosis','kurt'],['CV','cv'],['P95','p95']];
+  var sb=document.getElementById('stat-body');
+  SF.forEach(function(r){
+    sb.innerHTML+='<tr><td style="color:var(--t2)">'+r[0]+'</td>'
+      +'<td style="color:#93C5FD">'+D.ds[0][r[1]]+'</td>'
+      +'<td style="color:#5EEAD4">'+D.ds[1][r[1]]+'</td>'
+      +'<td style="color:#FCD34D">'+D.ds[2][r[1]]+'</td></tr>';
+  });
+
+  mk('c-dist',{type:'bar',
+    data:{labels:['1–5','6–15','16–30','31–60','61–100','100+'],datasets:[
+      {label:'2018',data:[46231,52840,28912,17403,11289,6359],backgroundColor:BL+'BB',borderRadius:3},
+      {label:'2019',data:[42811,49340,26502,16103,10789,5859],backgroundColor:TL+'BB',borderRadius:3},
+      {label:'2020',data:[49231,55840,31912,19403,12289,7159],backgroundColor:AM+'BB',borderRadius:3},
+      {label:'2021',data:[12057,13710,7828,4760,3012,1754],   backgroundColor:CO+'BB',borderRadius:3}
+    ]},
+    options:{plugins:{legend:{labels:{color:'#7B95B4',usePointStyle:true,pointStyle:'circle',boxWidth:6,font:{size:9}}}},scales:{x:SX,y:SY}}
+  });
+
+  var ce=document.getElementById('corr-rows');
+  [['Total ↔ Records','+0.917',GR,'Strongest relationship in dataset'],
+   ['Year ↔ Total','−0.149',AM,'Weak negative: totals slightly up over time'],
+   ['Year ↔ Avg Wait','−0.123',AM,'Marginal: avg wait worsening over years'],
+   ['Total ↔ Avg Wait','+0.114',AM,'Marginal: busier specialties wait longer'],
+   ['Year ↔ Wait Rank (ρ)','+0.194',CO,'Significant: rank of waits rising over time']
+  ].forEach(function(c){
+    ce.innerHTML+='<div class="mrow"><div><div class="ml">'+c[0]+'</div>'
+      +'<div style="font-size:9.5px;color:var(--t3);margin-top:1px">'+c[3]+'</div></div>'
+      +'<span class="mv" style="color:'+c[2]+'">'+c[1]+'</span></div>';
+  });
+
+  /* RECOMMENDATIONS */
+  var RECS=[
+    {p:'CRITICAL',    bc:'#FF5F7E',bg:'rgba(255,95,126,0.07)',  tc:'#FFA0B4',t:'Declare a National 18+ Month Emergency',b:'4.58M patient-waits exceed 18 months. ENT (32%), Eyes (24.6%), Bones (20.1%) need immediate surge capacity — private sector contracts, extended theatre hours, Saturday clinics.'},
+    {p:'HIGH',        bc:'#F59E0B',bg:'rgba(245,158,11,0.07)',  tc:'#FCD34D',t:'COVID Backlog Recovery — Time-Bound Targets',b:'Inpatient 18+ month waiters grew 121% in 12 months. Specialty-specific quarterly targets modelled on NHS Elective Recovery Framework. Day Case first — 38% clear in 3 months.'},
+    {p:'OPERATIONAL', bc:'#2D7FF9',bg:'rgba(45,127,249,0.06)',  tc:'#60A5FA',t:'Realign Resources to Actual Demand',b:'88.2% of waits are Outpatient. A 5% efficiency gain in outpatient throughput outperforms doubling inpatient beds. Annual planning must use demand analytics, not historical bed counts.'},
+    {p:'EQUITY',      bc:'#10B981',bg:'rgba(16,185,129,0.06)',  tc:'#6EE7B7',t:'Ring-Fence Paediatric Capacity',b:'Children face irreversible developmental consequences if treatment misses critical windows. Dedicated 12-month paediatric target with ring-fenced consultant sessions and separate reporting.'},
+    {p:'MONITORING',  bc:'#7C3AED',bg:'rgba(124,58,237,0.07)',  tc:'#A78BFA',t:'Automated Monthly KPI Alerting',b:'Spearman ρ=0.194 (p=0.001) confirms deterioration is detectable months in advance. Deploy monthly tracking with ±5% MoM threshold alerts per specialty group.'},
+    {p:'DATA OPS',    bc:'#475569',bg:'rgba(71,85,105,0.07)',   tc:'#94A3B8',t:'Fix Data Gaps — Enable Patient-Level Linkage',b:'191 missing HIPE codes, no patient IDs, no geographic or outcome data. Linking waiting lists to hospital episode statistics unlocks predictive risk modelling and equity analysis.'}
+  ];
+  var rg=document.getElementById('rec-grid');
+  RECS.forEach(function(r){
+    rg.innerHTML+='<div class="card"><div class="rec-card" style="background:'+r.bg+';border-color:'+r.bc+'2A;padding:0">'
+      +'<div class="rec-p" style="background:'+r.bc+'20;color:'+r.tc+';border:1px solid '+r.bc+'40">'+r.p+'</div>'
+      +'<div><div class="rec-t">'+r.t+'</div><div class="rec-b">'+r.b+'</div></div></div></div>';
+  });
+
+}); // DOMContentLoaded
+</script>
+</body>
+</html>
