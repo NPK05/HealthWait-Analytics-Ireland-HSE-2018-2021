@@ -9,7 +9,7 @@
 ![Chart.js](https://img.shields.io/badge/Dashboard-Chart.js-FF6384?style=flat&logo=chartdotjs&logoColor=white)
 ![HTML](https://img.shields.io/badge/Frontend-HTML%2FCSS%2FJS-E34F26?style=flat&logo=html5&logoColor=white)
 ![Status](https://img.shields.io/badge/Status-Complete-10B981?style=flat)
-![License](https://img.shields.io/badge/License-MIT-blue?style=flat)
+
 
 <br>
 
@@ -107,11 +107,11 @@ hse-waiting-list-eda/
 │   ├── Op_WL 2018-2021.csv          # Outpatient waiting list data
 │   └── Mapping_Specialty.csv        # Specialty → Group mapping
 │
-├── notebooks/
-│   └── healthcare_eda_analysis.py   # Full EDA Python script
+├── healthcare_eda_analysis.py   # Full EDA Python script
+│   
 │
-├── sql/
-│   └── healthcare_eda_queries.sql   # DDL + 15 analytical queries
+├── healthcare_eda_queries.sql   # DDL + 15 analytical queries
+│   
 │
 ├── charts/
 │   ├── 01_data_model.png            # Entity Relationship Diagram
@@ -125,11 +125,11 @@ hse-waiting-list-eda/
 │   ├── 09_statistical_analysis.png  # Violin plots, Spearman, Chi-square
 │   └── 10_specialty_risk_matrix.png # Bubble scatter: volume vs risk
 │
-├── dashboard/
-│   └── healthcare_eda_dashboard.html  # Interactive analytics dashboard
+├── healthcare_eda_dashboard.html  # Interactive analytics dashboard
+│  
 │
-├── report/
-│   └── healthcare_eda_report.docx   # Full 10-section Word report
+├── report/ healthcare_eda_report.docx   # Full 10-section Word report
+│   
 │
 └── README.md
 ```
