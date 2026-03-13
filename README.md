@@ -419,7 +419,7 @@ Data Analyst · HSE Ireland Waiting List EDA Portfolio Project
 
 ## 📄 License
 
-This project is licensed under the MIT License. The dataset is sourced from [HSE Ireland Open Data](https://data.gov.ie) and is publicly available under the Creative Commons Attribution 4.0 licence.
+The dataset is sourced from [HSE Ireland Open Data](https://data.gov.ie) and is publicly available under the Creative Commons Attribution 4.0 licence.
 
 ---
 
