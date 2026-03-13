@@ -305,7 +305,8 @@ All distributions exhibited extreme right-skewness (skewness > 5.4, kurtosis > 5
 
 ## 🖥 Interactive Dashboard
 
-The project includes a fully self-contained **interactive HTML dashboard** (`healthcare_eda_dashboard.html`) — no server required, open directly in any browser.
+The project includes a fully self-contained **interactive HTML dashboard** (`healthcare_eda_dashboard.html`) — no server required, open directly in any browser. 
+| https://npk05.github.io/HealthWait-Analytics-Ireland-HSE-2018-2021/ |
 
 ### Dashboard Tabs
 
