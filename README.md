@@ -1,6 +1,6 @@
-# 18 Months Too Long — Ireland HSE Waiting List Analytics (2018–2021)
+# 18 Months Too Long - Ireland HSE Waiting List Analytics (2018–2021)
 
-> *EDA of Ireland's HSE waiting lists (2018–2021) — 24.6M patient-waits, COVID impact analysis, statistical testing & interactive analytics dashboard.*
+> *EDA of Ireland's HSE waiting lists (2018–2021) - 24.6M patient-waits, COVID impact analysis, statistical testing & interactive analytics dashboard.*
 
 <br>
 
